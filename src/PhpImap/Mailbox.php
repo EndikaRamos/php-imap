@@ -875,7 +875,7 @@ class Mailbox {
 		if ($partStructure->subtype == 'RFC822' && $partStructure->disposition == 'attachment') {
 			//Although weàre downloading each parte separately, we'are going to donwload de eml to a single file
 			//incase someone wants to process or parse in another process
-			$attachment = self::downloadAttachment($dataInfo, $params, $partStructure, $mail->id);
+			$attachment = self::downloadAttachment($dataInfo, $params, $partStructure, $mail->id, false);
 			$mail->addAttachment($attachment);
 		}
 
@@ -886,7 +886,7 @@ class Mailbox {
 
 		if($isAttachment) {
 			//Donwload attachment extracted to another function
-			$attachment = self::downloadAttachment($dataInfo, $params, $partStructure, $mail->id);
+			$attachment = self::downloadAttachment($dataInfo, $params, $partStructure, $mail->id, $emlParse);
 			$mail->addAttachment($attachment);
 		}
 		else {
@@ -921,8 +921,10 @@ class Mailbox {
 
 	/**
 	 * Download attachmentment (separated from the code)
+	 * 
+	 * @param string emlOrigin => used to know if an attachment cames from an fron an eml or not
 	 */
-	public function downloadAttachment($dataInfo, $params, $partStructure, $mailId){
+	public function downloadAttachment($dataInfo, $params, $partStructure, $mailId, $emlOrigin = false){
 		$attachmentId = mt_rand() . mt_rand();
 		if ($partStructure->subtype == 'RFC822' && $partStructure->disposition == 'attachment') {
 			$fileName = $attachmentId . '.' . strtolower($partStructure->subtype).'.eml';
@@ -938,6 +940,7 @@ class Mailbox {
 		$attachment->id = $attachmentId;
 		$attachment->contentId = $partStructure->ifid ? trim($partStructure->id, " <>") : null;
 		$attachment->name = $fileName;
+		$attachment->emlOrigin = $emlOrigin;
 		$attachment->disposition = (isset($partStructure->disposition) ? $partStructure->disposition : null);
 		$attachment->charset = (isset($params['charset']) AND !empty($params['charset'])) ? $params['charset'] : null;
 		if($this->getAttachmentsDir() != null) {
